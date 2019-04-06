@@ -2,6 +2,8 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib
 
+from email import *
+
 def create_label(text):
 	e = Gtk.Label()
 	e.set_text(text)
@@ -65,7 +67,7 @@ def click_button(button):
 	filters.set_name("png/jpg")
 	filters.add_mime_type("image/jpeg")
 	filters.add_mime_type("image/png")
-	c_file_chooser =  Gtk.FileChooserDialog("Please choose a folder", c_cert_assistant,
+	c_file_chooser =  Gtk.FileChooserDialog("Please choose an image", c_cert_assistant,
             Gtk.FileChooserAction.OPEN,
             (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
              "Select", Gtk.ResponseType.OK))
@@ -83,7 +85,7 @@ def click_button(button):
 	new_button = Gtk.Button("+")
 	c_add_file_grid.remove(button)
 
-	new_label = Gtk.Label(filename.split("/")[-1])
+	new_label = Gtk.Label(filename)
 	delete_button = Gtk.Button("x")
 	new_hbox.add(delete_button)
 	new_hbox.add(new_label)
@@ -101,20 +103,53 @@ def click_button(button):
 
 c_add_image.connect("clicked", click_button)
 
-c_error_page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 c_text_result = Gtk.TextView()
-c_error_page.add(c_text_result)
+c_text_result.set_cursor_visible(False)
+c_text_result.set_wrap_mode(Gtk.WrapMode.WORD)
 c_text_result.set_hexpand(True)
 c_text_result.set_vexpand(True)
 c_text_result.set_editable(False)
-c_cert_assistant.append_page(c_error_page)
-c_cert_assistant.set_page_type(c_error_page, Gtk.AssistantPageType.CONFIRM)
-c_cert_assistant.set_page_title(c_error_page, "Confirm certificate   ")
+c_cert_assistant.append_page(c_text_result)
+c_cert_assistant.set_page_type(c_text_result, Gtk.AssistantPageType.CONFIRM)
+c_cert_assistant.set_page_title(c_text_result, "Confirm certificate   ")
 
+missing_info_g = []
+missing_serial_g = []
+
+def check_info_fields(w):
+	if type(w) is Gtk.Grid:
+		w.foreach(check_info_fields)
+	elif type(w) is Gtk.Entry:
+		missing_info_g.append(w.get_text() != "")
+
+def check_sn_fields(w):
+	if type(w) is Gtk.Box:
+		w.foreach(check_sn_fields)
+	elif type(w) is Gtk.Entry:
+		missing_serial_g.append(len(w.get_text()) == 5 and w.get_text().isdigit())
+
+def f(a, p):
+	if type(p) is Gtk.TextView:
+		buf = p.get_buffer()
+		check_info_fields(c_info_grid)
+		check_sn_fields(c_add_file_grid)
+
+		if False in missing_info_g:
+			buf.insert_at_cursor("Missing information field.\n")
+
+		if False in missing_serial_g:
+			buf.insert_at_cursor("Missing serial number field.\n")
+
+		if False in missing_serial_g and False in missing_info_g:
+			pass
+
+		p.set_buffer(buf)
+
+c_cert_assistant.connect('prepare', f)
 c_cert_assistant.connect("close", lambda a: Gtk.main_quit())
 c_cert_assistant.connect("cancel", lambda a: Gtk.main_quit())
 c_cert_assistant.set_title("Watermarker")
 c_cert_assistant.show_all()
-#mail_window.connect("destroy", Gtk.main_quit)
-#mail_window.show_all()
+
+mail_window.show_all()
 Gtk.main()
