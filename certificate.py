@@ -22,17 +22,20 @@ def readfile(filename):
     file = open(filename, "r")
     return file.read()
 
-def certify(cert, receivers):
-    imagenamesraw, mailsraw, storedhash = cert.split("\n")
-    imagenames = imagenamesraw.strip().split(", ")
+def certify(cert, imagepaths, receivers):
+    storednames, mailsraw, storedhash = cert.split("\n")
+
+    imagenames = [path.rsplit('/', 1)[-1] for path in imagepaths]
+    if sorted(imagenames) != storednames:
+        return (False, "One or more image names has a mismatch")
+
     mails = mailsraw.strip().split(", ")
-
-    newhash = str(hashfiles(*imagenames))
-
-    if newhash != storedhash:
-        return (False, "One or more images had a mismatch")
     if sorted(receivers) != mails:
         return (False, "One or more recipient mails has a mismatch")
+
+    newhash = str(hashfiles(*imagenames))
+    if newhash != storedhash:
+        return (False, "One or more images had a mismatch")
 
     return (True, "The certificate was matched!")
 
@@ -48,10 +51,8 @@ def hashfiles(*paths):
                 buf = imagedata.read(BLOCKSIZE)
     return hasher.hexdigest()
 
-'''
 cert = makecertificate(["Edit.png", "Lenna.png"], ["mail1", "mail3", "mail2"])
 writefile("Certtest", cert)
 cert2 = readfile("Certtest")
-success, message = certify(cert2, ["mail3", "mail1", "mail2"])
+success, message = certify(cert2, ["linux/apple/Lenna.png", "Edit.png"], ["mail3", "mail1", "mail2"])
 print(message)
-'''
