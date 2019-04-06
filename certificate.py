@@ -48,9 +48,10 @@ def hashfiles(*paths):
                 buf = imagedata.read(BLOCKSIZE)
     return hasher.hexdigest()
 
-
+'''
 cert = makecertificate(["Edit.png", "Lenna.png"], ["mail1", "mail3", "mail2"])
 writefile("Certtest", cert)
 cert2 = readfile("Certtest")
 success, message = certify(cert2, ["mail3", "mail1", "mail2"])
 print(message)
+'''

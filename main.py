@@ -2,7 +2,9 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib
 
-from email import *
+from our_email import *
+from watermark import *
+from certificate import *
 
 def create_label(text):
 	e = Gtk.Label()
@@ -120,12 +122,16 @@ def check_info_fields(w):
 	if type(w) is Gtk.Grid:
 		w.foreach(check_info_fields)
 	elif type(w) is Gtk.Entry:
+		email_info.append(w.get_text())
 		missing_info_g.append(w.get_text() != "")
 
 def check_sn_fields(w):
 	if type(w) is Gtk.Box:
 		w.foreach(check_sn_fields)
+	elif type(w) is Gtk.Label:
+		img_names.append(w.get_text())
 	elif type(w) is Gtk.Entry:
+		serial_numbers.append(w.get_text())
 		missing_serial_g.append(len(w.get_text()) == 5 and w.get_text().isdigit())
 
 def f(a, p):
@@ -140,9 +146,31 @@ def f(a, p):
 		if False in missing_serial_g:
 			buf.insert_at_cursor("Missing serial number field.\n")
 
-		if False in missing_serial_g and False in missing_info_g:
-			pass
+		if not False in missing_serial_g and not False in missing_info_g:
+			img_names.pop(0)
+			img_names.pop(0)
+			img_names.pop(0)
+			watermark = Watermark(*email_info)
+			
+			imgs = []
+			print(email_info)
+			print(img_names)
+			print(serial_numbers)
 
+			for i, s in zip(img_names, serial_numbers):
+				with Image(filename=i) as img:
+					result = watermark(img, s, True)
+					result.save(filename="wm_" + i.split('/')[-1])
+				imgs.append("wm_" + i.split('/')[-1])
+
+			cert = makecertificate(imgs, [email_info[0]])
+			print('cert_imgs')
+			writefile('cert_imgs', cert)
+
+			buf.insert_at_cursor("\nYour certificate:\n")
+			buf.insert_at_cursor(cert)
+
+		
 		p.set_buffer(buf)
 
 c_cert_assistant.connect('prepare', f)

@@ -38,15 +38,29 @@ load_images = []
 cert = ""
 
 def attach_file(button):
+	image_filter = Gtk.FileFilter()
+	image_filter.set_name("png/jpg")
+	image_filter.add_mime_type("image/jpeg")
+	image_filter.add_mime_type("image/png")
+	cert_filter = Gtk.FileFilter()
+	cert_filter.set_name("certificate")
+	cert_filter.add_mime_type("text/plain")
 	c_file_chooser =  Gtk.FileChooserDialog("Please choose a certificate", mail_window,
             Gtk.FileChooserAction.OPEN,
             (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
              "Select", Gtk.ResponseType.OK))
+	c_file_chooser.add_filter(cert_filter)
+	c_file_chooser.add_filter(image_filter)
 	response = c_file_chooser.run()
 	filename = ""
-	if response == Gtk.ResponseType.OK:
+	if response == Gtk.ResponseType.OK and c_file_chooser.get_filter() == cert_filter:
+		global cert
 		cert = c_file_chooser.get_filename()
 		cert = readfile(cert)
+	if response == Gtk.ResponseType.OK and c_file_chooser.get_filter() == image_filter:
+		global load_images
+		load_images.append(c_file_chooser.get_filename())
+		print(load_images)
 	else:
 		c_file_chooser.destroy()
 		return

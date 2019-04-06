@@ -49,9 +49,10 @@ class Watermark:
         self.font.pop()
         return result
 
-
+'''
 with Image(filename='VestaShilling.JPG') as img:
     marking = Watermark("Thomas Frandsen", "thomas.frandsen@hotmail.com", "Kasper Steensig", "kasper.steensig@gmail.com")
     result = marking(img, "27803", True)
     result.save(filename='Edit.png')
     display(result)
+'''
