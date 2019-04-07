@@ -26,16 +26,17 @@ def certify(cert, imagepaths, receivers):
     storednamesraw, mailsraw, storedhash = cert.split("\n")
     storednames = storednamesraw.strip().split(", ")
 
-    imagenames = [path.rsplit('/', 1)[-1] for path in imagepaths]
-    imagenames = sorted(imagenames)
-    if imagenames != storednames:
+    # Sort zipped with truncated to ensure same hash ordering
+    imagenames, spaths = zip(*sorted([(path.rsplit('/', 1)[-1], path) for path in imagepaths]))
+
+    if list(imagenames) != storednames:
         return (False, "One or more image names has a mismatch")
 
     mails = mailsraw.strip().split(", ")
     if sorted(receivers) != mails:
         return (False, "One or more recipient mails has a mismatch")
 
-    newhash = str(hashfiles(*imagenames))
+    newhash = str(hashfiles(*spaths))
     if newhash != storedhash:
         return (False, "One or more images had a mismatch")
 
@@ -55,9 +56,9 @@ def hashfiles(*paths):
 
 
 '''
-cert = makecertificate(["apple/linux/Lenna.png", "Edit.png"], ["mail1", "mail3", "mail2"])
+cert = makecertificate(["Lenna.png", "Edit.png"], ["mail1", "mail3", "mail2"])
 writefile("Certtest", cert)
 cert2 = readfile("Certtest")
-success, message = certify(cert2, ["apple/linux/Lenna.png", "Edit.png"], ["mail3", "mail1", "mail2"])
+success, message = certify(cert2, ["Lenna.png", "Edit.png"], ["mail3", "mail1", "mail2"])
 print(message)
 '''
