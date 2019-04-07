@@ -8,11 +8,18 @@ from certificate import *
 
 mail_whitelist = ["mail1@lego.com", "mail2@lego.com"]
 
-serial_number = {
+serial_number_do_not_send = {
     "12345" : False,
     "54321" : True,
     "99999" : True,
     "11111" : True,
+}
+
+serial_number_status = {
+    "00000" : False,
+    "22222" : True,
+    "33333" : True,
+    "44444" : True,
 }
 
 mail_window = Gtk.Window()
@@ -67,9 +74,20 @@ def attach_file(button):
 	c_file_chooser.destroy()
 
 def send_file(button):
-	print(cert)
-	(b, s) = certify(cert, [receiver_field.get_text()])
-	print(s)
+	rec = receiver_field.get_text()
+	if rec in mail_whitelist:
+		print("Send mail to {0}".format(rec))
+	elif rec not in mail_whitelist:
+		for s in serial_numbers:
+			if not serial_number_do_not_send[s]:
+				print("Serial no. {0} is not allowed to be sent yet".format(s))
+				return
+		(b, s) = certify(cert, load_images, [receiver_field.get_text()])
+		print(s)
+	else:
+		print("Cannot send to a non-whitelisted mail address without a certificate")
+			
+		
 
 hbox1 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
 hbox1.add(label_receiver)
